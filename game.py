@@ -40,7 +40,6 @@ def load_pieces():
 
 class Game:
     def __init__(self):
-        self.draggedpiece = None
         self.drag = False
         pygame.init()
         pygame.display.set_caption('Chess AI')
@@ -68,13 +67,13 @@ class Game:
 
                 # Draw pieces
                 piece = self.chessboard.board.piece_at(chess.square(col, row))
-                if piece: #and (self.draggedpiece is None or piece != self.draggedpiece):
+                if piece and not(self.drag and self.selected_piece[1] == chess.square(col, row)):
                     screen.blit(self.piece_images[piece.symbol()], (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
         # Draw the piece being dragged at the mouse position
-        if self.drag and self.draggedpiece:
+        if self.drag and self.selected_piece:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            screen.blit(self.piece_images[self.draggedpiece.symbol()],
+            screen.blit(self.piece_images[self.selected_piece[0].symbol()],
                         (mouse_x - SQUARE_SIZE // 2, mouse_y - SQUARE_SIZE // 2))
 
     def run(self):
@@ -95,7 +94,6 @@ class Game:
                 piece = self.chessboard.get_piece(self.start_pos)
                 if piece:
                     self.drag = True
-                    self.draggedpiece = piece
                     self.selected_piece = (piece, self.start_pos)
                     self.chessboard.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
                                                    move.from_square == self.start_pos]
@@ -112,7 +110,6 @@ class Game:
                     if move in self.chessboard.board.legal_moves:
                         self.chessboard.make_move(move)
 
-                self.draggedpiece = None
                 self.selected_piece = None
 
     def handle_click_to_move(self):

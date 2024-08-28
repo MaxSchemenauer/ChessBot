@@ -5,23 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97a5f843-d4ce-4ee2-8829-e506b35b2dce" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ChessBoard.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_bishop.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_knight.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_pawn.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_queen.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/black_rook.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/tile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_bishop.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_knight.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_pawn.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_queen.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/white_rook.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/piece.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +70,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1724616972766</updated>
-      <workItem from="1724616975240" duration="20359000" />
+      <workItem from="1724616975240" duration="21080000" />
     </task>
     <servers />
   </component>
@@ -104,7 +89,7 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ChessBot$game.coverage" NAME="game Coverage Results" MODIFIED="1724649528655" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ChessBot$game.coverage" NAME="game Coverage Results" MODIFIED="1724650173744" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ChessBot$chess_board.coverage" NAME="chess_board Coverage Results" MODIFIED="1724626862462" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ChessBot$ChessBoard.coverage" NAME="ChessBoard Coverage Results" MODIFIED="1724631747957" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>

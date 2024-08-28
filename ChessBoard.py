@@ -1,13 +1,6 @@
 import pygame
 import chess
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-LIGHT_BROWN = (240, 217, 181)
-DARK_BROWN = (181, 136, 99)
-HIGHLIGHT_COLOR = (0, 255, 0)
-SQUARE_SIZE = 80
-
 
 class ChessBoard:
     def __init__(self):

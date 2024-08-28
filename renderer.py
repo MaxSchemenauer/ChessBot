@@ -5,8 +5,8 @@ from ChessBoard import ChessBoard
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-LIGHT_BROWN = (240, 217, 181)
-DARK_BROWN = (181, 136, 99)
+LIGHT_BROWN = (237, 214, 176, 255)
+DARK_BROWN = (184, 135, 98, 255)
 HIGHLIGHT_COLOR = (0, 255, 0)
 SQUARE_SIZE = 80
 
@@ -35,6 +35,9 @@ def load_pieces():
         'q': pygame.transform.scale(pygame.image.load('images/black_queen.png'), (SQUARE_SIZE, SQUARE_SIZE)),
         'k': pygame.transform.scale(pygame.image.load('images/black_king.png'), (SQUARE_SIZE, SQUARE_SIZE))
     }
+    for piece_image in piece_images.values():
+        tint_color = (233, 229, 194)
+        piece_image.fill(tint_color, special_flags=pygame.BLEND_RGBA_MULT)
     return piece_images
 
 
@@ -67,8 +70,9 @@ class Game:
 
                 # Draw pieces
                 piece = self.chessboard.board.piece_at(chess.square(col, row))
-                if piece and not(self.drag and self.selected_piece[1] == chess.square(col, row)):
-                    screen.blit(self.piece_images[piece.symbol()], (col * SQUARE_SIZE, row * SQUARE_SIZE))
+                if piece and not (self.drag and self.selected_piece[1] == chess.square(col, row)):
+                    piece_image = self.piece_images[piece.symbol()]
+                    screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
         # Draw the piece being dragged at the mouse position
         if self.drag and self.selected_piece:

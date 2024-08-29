@@ -94,6 +94,7 @@ class Game:
                 exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                self.drag = False  # reset drag flag if click occurs
                 pos = pygame.mouse.get_pos()
                 self.start_pos = get_square_from_pos(pos)
                 piece = self.chessboard.get_piece(self.start_pos)
@@ -102,6 +103,9 @@ class Game:
                     self.selected_piece = (piece, self.start_pos)
                     self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
                                         move.from_square == self.start_pos]
+
+            if event.type == pygame.MOUSEMOTION:
+
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.drag = False

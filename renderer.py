@@ -3,19 +3,24 @@ import chess
 
 from ChessBoard import ChessBoard
 
+#  TODO square border white when hovering piece over it.
+#       available moves per piece, grey dot center of square
+#       selected square: light square - rgba(246,235,114,255), dark square - rgba(220,195,75,255)
+#       on move: from and to are also highlighted
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_BROWN = (237, 214, 176, 255)
 DARK_BROWN = (184, 135, 98, 255)
 HIGHLIGHT_COLOR = (0, 255, 0)
-SQUARE_SIZE = 80
+SQUARE_SIZE = 100
 
 
 def get_square_from_pos(pos):
-    """Convert pixel position to chessboard square."""
+    """Convert pixel position to chessboard square, with white pieces at the bottom."""
     x, y = pos
-    row = y // SQUARE_SIZE
     col = x // SQUARE_SIZE
+    row = 7 - (y // SQUARE_SIZE)  # Flip the row
     return chess.square(col, row)
 
 
@@ -46,7 +51,7 @@ class Game:
         self.drag = False
         pygame.init()
         pygame.display.set_caption('Chess AI')
-        self.screen = pygame.display.set_mode((640, 640))
+        self.screen = pygame.display.set_mode((800, 800))
         self.chessboard = ChessBoard()
         self.selected_square = None
         self.clock = pygame.time.Clock()
@@ -64,13 +69,13 @@ class Game:
                                  pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
                 # Highlight square if it's the selected square
-                if self.selected_square and self.selected_square == chess.square(col, row):
+                if self.selected_square and self.selected_square == chess.square(col, 7 - row):  # Adjusted for flip
                     pygame.draw.rect(screen, HIGHLIGHT_COLOR,
                                      pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
                 # Draw pieces
-                piece = self.chessboard.board.piece_at(chess.square(col, row))
-                if piece and not (self.drag and self.selected_piece[1] == chess.square(col, row)):
+                piece = self.chessboard.board.piece_at(chess.square(col, 7 - row))  # Adjusted for flip
+                if piece and not (self.drag and self.selected_piece[1] == chess.square(col, 7 - row)):
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 

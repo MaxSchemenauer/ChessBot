@@ -95,8 +95,7 @@ class Game:
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.drag = False  # reset drag flag if click occurs
-                pos = pygame.mouse.get_pos()
-                self.start_pos = get_square_from_pos(pos)
+                self.start_pos = get_square_from_pos(pygame.mouse.get_pos())  # square from start of a move
                 piece = self.chessboard.get_piece(self.start_pos)
                 if piece:
                     self.drag = True
@@ -104,20 +103,21 @@ class Game:
                     self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
                                         move.from_square == self.start_pos]
 
-            if event.type == pygame.MOUSEMOTION:
-
-
             elif event.type == pygame.MOUSEBUTTONUP:
-                self.drag = False
-                pos = pygame.mouse.get_pos()
-                self.end_pos = get_square_from_pos(pos)  # Calculate the square where the piece should be dropped
-
-                if self.selected_piece:  # if a piece is selected attempt to make a move
+                self.end_pos = get_square_from_pos(pygame.mouse.get_pos())  # square of mouse click
+                if self.drag:  # if a piece was grabbed
                     piece, old_pos = self.selected_piece
-                    move = chess.Move(old_pos, self.end_pos)
-                    self.chessboard.make_move(move)
+                    if old_pos == self.end_pos:
+                        print("clicked piece:", self.selected_piece)
+                    else:
+                        print("finish drag")
+                        move = chess.Move(old_pos, self.end_pos)
+                        self.chessboard.make_move(move)
+                        self.selected_piece = None
+                    self.drag = False
 
-                self.selected_piece = None
+                else:
+                    print("clicked board:", self.selected_piece)
 
     def handle_click_to_move(self):
         if self.start_pos and self.end_pos:

@@ -30,7 +30,6 @@ while True:
                     print("clicked on selected rect")
                 else:
                     pass
-            # TODO: unassign clicked rectangle if this is not it
             # handle what was clicked on
             if rect1.collidepoint(event.pos):
                 print("selected rect1")
@@ -64,7 +63,7 @@ while True:
             else:
                 print("ended drag")
             dragging = False  # Reset dragging
-            start_pos = None  # Clear start_pos to prevent unintended behavior
+            start_pos = None  # Clear mousedown_pos to prevent unintended behavior
 
     # Drawing
     screen.fill((255, 255, 255))  # Clear screen

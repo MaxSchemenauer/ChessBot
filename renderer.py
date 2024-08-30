@@ -3,25 +3,20 @@ import chess
 
 from ChessBoard import ChessBoard
 
-#  TODO square border white when hovering piece over it.
-#       available moves per piece, grey dot center of square
-#       selected square: light square - rgba(246,235,114,255), dark square - rgba(220,195,75,255)
-#       on move: from and to are also highlighted
-
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_BROWN = (237, 214, 176, 255)
 DARK_BROWN = (184, 135, 98, 255)
 HIGHLIGHT_COLOR = (0, 255, 0)
-SQUARE_SIZE = 100
+SQUARE_SIZE = 80
 
 
 def get_square_from_pos(pos):
-    """Convert pixel position to chessboard square, with white pieces at the bottom."""
+    """Convert pixel position to chessboard square."""
     x, y = pos
+    row = y // SQUARE_SIZE
     col = x // SQUARE_SIZE
-    row = 7 - (y // SQUARE_SIZE)  # Flip the row
-    return chess.square(col, row)
+    return chess.square(col, 7 - row)
 
 
 def load_pieces():
@@ -48,16 +43,17 @@ def load_pieces():
 
 class Game:
     def __init__(self):
-        self.drag = False
+        self.legal_moves = []  # keeps track of legal squares that selected piece can move to
+        # self.drag = False
         pygame.init()
         pygame.display.set_caption('Chess AI')
-        self.screen = pygame.display.set_mode((800, 800))
+        self.screen = pygame.display.set_mode((640, 640))
         self.chessboard = ChessBoard()
-        self.selected_square = None
         self.clock = pygame.time.Clock()
-        self.start_pos = None
-        self.end_pos = None
+        self.mousedown_pos = None
+        self.mouseup_pos = None
         self.selected_piece = None
+        self.grabbed_piece = None
         self.piece_images = load_pieces()
 
     def draw_board(self, screen):
@@ -69,20 +65,20 @@ class Game:
                                  pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
                 # Highlight square if it's the selected square
-                if self.selected_square and self.selected_square == chess.square(col, 7 - row):  # Adjusted for flip
+                if self.selected_piece and self.selected_piece[1] == chess.square(col, 7 - row):
                     pygame.draw.rect(screen, HIGHLIGHT_COLOR,
                                      pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
                 # Draw pieces
-                piece = self.chessboard.board.piece_at(chess.square(col, 7 - row))  # Adjusted for flip
-                if piece and not (self.drag and self.selected_piece[1] == chess.square(col, 7 - row)):
+                piece = self.chessboard.board.piece_at(chess.square(col, 7 - row))
+                if piece and not (self.grabbed_piece and self.grabbed_piece[1] == chess.square(col, 7 - row)):
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
         # Draw the piece being dragged at the mouse position
-        if self.drag and self.selected_piece:
+        if self.grabbed_piece:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            screen.blit(self.piece_images[self.selected_piece[0].symbol()],
+            screen.blit(self.piece_images[self.grabbed_piece[0].symbol()],
                         (mouse_x - SQUARE_SIZE // 2, mouse_y - SQUARE_SIZE // 2))
 
     def run(self):
@@ -98,36 +94,36 @@ class Game:
                 exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                self.start_pos = get_square_from_pos(pos)
-                piece = self.chessboard.get_piece(self.start_pos)
-                if piece:
-                    self.drag = True
-                    self.selected_piece = (piece, self.start_pos)
-                    self.chessboard.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
-                                                   move.from_square == self.start_pos]
+                move_made = False
+                self.mousedown_pos = get_square_from_pos(pygame.mouse.get_pos())  # square from start of a move
+                piece = self.chessboard.get_piece(self.mousedown_pos)
+                if piece:  # if clicking on a piece
+                    if self.selected_piece:  # attempting to move to another piece's location
+                        move = chess.Move(self.selected_piece[1], self.mousedown_pos)
+                        move_made = self.chessboard.make_move(move)
+                        print("clicking a new piece")
+                    if not move_made:
+                        self.selected_piece = (piece, self.mousedown_pos)
+                        self.grabbed_piece = (piece, self.mousedown_pos)
+                        self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
+                                            move.from_square == self.mousedown_pos]
+                else:
+                    if self.selected_piece:
+                        print("clicking board:", self.selected_piece)
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                self.drag = False
-                pos = pygame.mouse.get_pos()
-                self.end_pos = get_square_from_pos(pos)  # Calculate the square where the piece should be dropped
-
-                if self.selected_piece:
+                self.mouseup_pos = get_square_from_pos(pygame.mouse.get_pos())  # square of mouse click
+                if self.selected_piece:  # if a piece is selected
                     piece, old_pos = self.selected_piece
-                    move = chess.Move(old_pos, self.end_pos)
-
-                    if move in self.chessboard.board.legal_moves:
+                    if old_pos != self.mouseup_pos:  # attempting move to empty square
+                        print("finish move")
+                        move = chess.Move(old_pos, self.mouseup_pos)
                         self.chessboard.make_move(move)
-
-                self.selected_piece = None
-
-    def handle_click_to_move(self):
-        if self.start_pos and self.end_pos:
-            move = chess.Move(self.start_pos, self.end_pos)
-            if move in self.chessboard.board.legal_moves:
-                self.chessboard.make_move(move)
-            self.start_pos = None
-            self.end_pos = None
+                        self.selected_piece = None  # after move no piece should be selected
+                else:
+                    print("clicked board:", self.selected_piece)
+                    self.selected_piece = None
+                self.grabbed_piece = None  # lets go grabbed piece
 
     def update_screen(self):
         self.screen.fill(BLACK)

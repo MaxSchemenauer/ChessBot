@@ -1,6 +1,6 @@
 import pygame
 import chess
-
+import random
 
 class ChessBoard:
     def __init__(self):
@@ -10,20 +10,22 @@ class ChessBoard:
         return self.board.piece_at(pos)
 
     def make_move(self, move):
-        """Handle making a move."""
-        # TODO handle promotes
+        """
+        Handle making a move.
+        :return: -1 if move fails, 0 if move is success, 1 if game is over
+        """
         try:
             if move in self.board.legal_moves:
                 self.board.push(move)
-                self.check_game_state()
+                return self.check_game_state()
             elif self.is_promotion(move):
                 # Convert the move to UCI, append 'q' for queen promotion, and convert back to a Move object
                 move = chess.Move.from_uci(move.uci() + 'q')
                 self.board.push(move)
-                self.check_game_state()
+                return self.check_game_state()
             else:
-                print("Invalid move")
-                return False
+                #print("Invalid move")
+                return -1
         except Exception as e:
             return f"Error: {e}"
 
@@ -37,16 +39,15 @@ class ChessBoard:
         return False
 
     def check_game_state(self):
-        """Check the current game state and return the appropriate message."""
+        """Returns 1 if game is over, else 0"""
         game_states = {
-            "checkmate": "Checkmate! {winner} wins.",
-            "stalemate": "Stalemate",
-            "fivefold_repetition": "Five Fold Repetition",
-            "insufficient_material": "Insufficient Material",
-            "fifty_moves": "Fifty-Move Rule Draw",
-            "threefold_repetition": "Threefold Repetition Draw"
+            "is_checkmate": "Checkmate! {winner} wins.",
+            "is_stalemate": "Stalemate",
+            "is_fivefold_repetition": "Five Fold Repetition",
+            "is_insufficient_material": "Insufficient Material",
+            "is_fifty_moves": "Fifty-Move Rule Draw",
+            "can_claim_threefold_repetition": "Threefold Repetition Draw"
         }
-
         for state, message in game_states.items():
             if getattr(self.board, f'is_{state}')():
                 if state == "checkmate":
@@ -54,5 +55,12 @@ class ChessBoard:
                     print(message.format(winner=winner))
                     return "Checkmate"
                 print(message)
-                return message
-        return "Move made"
+                return 1
+        return 0
+
+    def engine_move(self):
+        legal_moves = list(self.board.legal_moves)
+        random_move = random.choice(legal_moves)
+        self.board.push(random_move)
+        return self.check_game_state()
+

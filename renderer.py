@@ -1,5 +1,7 @@
 import pygame
 import chess
+import keyboard
+import time
 
 from ChessBoard import ChessBoard
 
@@ -84,6 +86,12 @@ class Game:
     def run(self):
         while True:
             self.handle_events()
+            # if keyboard.is_pressed('enter'):
+            #     self.chessboard.engine_move()
+            #     time.sleep(0.001)  # allows for move spamming
+            # if keyboard.is_pressed('space'):
+            #     self.chessboard.engine_move()
+            #     time.sleep(0.1)  # one move at a time
             self.update_screen()
             self.clock.tick(60)
 
@@ -94,36 +102,37 @@ class Game:
                 exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                move_made = False
+                move_status = -1
                 self.mousedown_pos = get_square_from_pos(pygame.mouse.get_pos())  # square from start of a move
                 piece = self.chessboard.get_piece(self.mousedown_pos)
-                if piece:  # if clicking on a piece
-                    if self.selected_piece:  # attempting to move to another piece's location
-                        move = chess.Move(self.selected_piece[1], self.mousedown_pos)
-                        move_made = self.chessboard.make_move(move)
-                        print("clicking a new piece")
-                    if not move_made:
+                if piece:  # clicked on a piece
+                    if self.selected_piece:  # a piece is already selected, try to move to clicked piece
+                        move_status = self.handle_move(self.selected_piece[1], self.mousedown_pos)
+                    if move_status == -1:  # if this move failed, select the clicked piece
                         self.selected_piece = (piece, self.mousedown_pos)
                         self.grabbed_piece = (piece, self.mousedown_pos)
-                        self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
-                                            move.from_square == self.mousedown_pos]
-                else:
-                    if self.selected_piece:
-                        print("clicking board:", self.selected_piece)
+                else:  # clicked on the board
+                    if self.selected_piece:  # if a piece is selected try to move that piece
+                        self.handle_move(self.selected_piece[1], self.mousedown_pos)
+                if self.selected_piece:
+                    self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
+                                        move.from_square == self.mousedown_pos]  # update legal moves for selected piece for display
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.mouseup_pos = get_square_from_pos(pygame.mouse.get_pos())  # square of mouse click
                 if self.selected_piece:  # if a piece is selected
                     piece, old_pos = self.selected_piece
-                    if old_pos != self.mouseup_pos:  # attempting move to empty square
-                        print("finish move")
-                        move = chess.Move(old_pos, self.mouseup_pos)
-                        self.chessboard.make_move(move)
-                        self.selected_piece = None  # after move no piece should be selected
-                else:
-                    print("clicked board:", self.selected_piece)
-                    self.selected_piece = None
-                self.grabbed_piece = None  # lets go grabbed piece
+                    if old_pos != self.mouseup_pos:  # drag and drop, else would be single click
+                        self.handle_move(old_pos, self.mouseup_pos)
+                self.grabbed_piece = None  # lets go grabbed piece on mouse up
+
+    def handle_move(self, old_pos, new_pos):
+        move = chess.Move(old_pos, new_pos)
+        move_status = self.chessboard.make_move(move)
+        if move_status != -1:  # after valid move no piece should be selected
+            self.selected_piece = None
+            print(move)
+        return move_status
 
     def update_screen(self):
         self.screen.fill(BLACK)

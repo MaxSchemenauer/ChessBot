@@ -3,6 +3,7 @@ import chess
 import keyboard
 import time
 
+from v1_random import v1_Random
 from game import Game
 
 SCREEN_WIDTH = 640
@@ -48,13 +49,14 @@ def load_pieces():
 
 
 class Renderer:
-    def __init__(self):
+    def __init__(self, game=Game(), engine=v1_Random):
+        self.chessboard = game
+        self.engine = engine
         self.game_ended = None
         pygame.init()
         pygame.display.set_caption('Chess AI')
         self.legal_moves = []  # keeps track of legal squares that selected piece can move to
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_WIDTH))
-        self.chessboard = Game()
         self.clock = pygame.time.Clock()
         self.move_from = None
         self.move_to = None
@@ -92,7 +94,7 @@ class Renderer:
                         self.draw_highlight(screen, square, highlight_color, col, row)
 
                 # Draw pieces, doesn't draw dragged piece
-                piece = self.chessboard.board.piece_at(chess.square(col, 7 - row))
+                piece = self.chessboard.get_piece(chess.square(col, 7 - row))
                 if piece and not (self.grabbed_piece and self.grabbed_piece[1] == chess.square(col, 7 - row)):
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
@@ -108,7 +110,9 @@ class Renderer:
 
     def run(self):
         while True:
-            if not self.game_ended:
+            if self.game_ended:
+                self.handle_game_end_events()
+            else:
                 self.handle_events()
             self.handle_keyboard_events()
             self.update_screen()
@@ -139,6 +143,7 @@ class Renderer:
                     if self.selected_piece:  # if a piece is selected try to move that piece
                         self.handle_move(self.selected_piece[1], click_pos)
                 if self.selected_piece:
+                    # TODO; display these moves
                     self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
                                         move.from_square == click_pos]  # update legal moves of selected piece
 
@@ -151,16 +156,58 @@ class Renderer:
                 self.grabbed_piece = None  # lets go grabbed piece on mouse up
 
     def handle_move(self, old_pos, new_pos):
+        """
+        handles a move made by a player, automatically responds with current engine
+        @param old_pos: moving from what square (0-63)
+        @param new_pos: moving to what square (0-63)
+        @return: status of the move, -1 if failed, 0 if game ended, 1 otherwise
+        """
         move = chess.Move(old_pos, new_pos)
         move_status = self.chessboard.make_move(move)
         if move_status != -1:  # after valid move no piece should be selected
             self.selected_piece = None
             self.move_from = old_pos
             self.move_to = new_pos
-            move_status = self.chessboard.engine_move()
+            self.engine.move(self.chessboard)
+            # Get the start and end squares of the last move
+            last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
+            if last_move:
+                self.move_from = last_move.from_square
+                self.move_to = last_move.to_square
         if move_status == 1:  # game ended
             self.game_ended = True
         return move_status
+
+    def handle_keyboard_events(self):
+        """
+        allows user to make bot play. hold enter to play rapidly, and space to play slowly
+        pressing 'r' restarts the game and logs the result
+        :return:
+        """
+        if not self.game_ended:  # moves stop happening when game ends
+            if keyboard.is_pressed('enter'):
+                move_status = self.engine.move(self.chessboard)
+                if move_status == 1:
+                    self.game_ended = True
+                time.sleep(0.001)  # allows for move spamming
+            if keyboard.is_pressed('space'):
+                move_status = self.engine.move(self.chessboard)
+                if move_status == 1:
+                    self.game_ended = True
+                time.sleep(0.2)  # one move at a time
+        if keyboard.is_pressed('r'):
+            self.chessboard.restart()
+            self.move_from = None
+            self.move_to = None
+            self.game_ended = False
+            time.sleep(0.1)  # one move at a time
+
+    @staticmethod
+    def handle_game_end_events():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
 
     def draw_game_end_popup(self):
         # Define popup dimensions and colors
@@ -185,65 +232,9 @@ class Renderer:
         self.screen.blit(game_over_text, (rect_x + rect_width / 2 - game_over_text.get_width() / 2,
                                           rect_y + rect_height / 2 - game_over_text.get_height() / 2))
 
-    def handle_keyboard_events(self):
-        """
-        allows user to make bot play. hold enter to play rapidly, and space to play slowly
-        pressing 'r' restarts the game and logs the result
-        :return:
-        """
-        if not self.game_ended:  # moves stop happening when game ends
-            if keyboard.is_pressed('enter'):
-                move_status = self.chessboard.engine_move()
-                if move_status == 1:
-                    self.game_ended = True
-                time.sleep(0.001)  # allows for move spamming
-            if keyboard.is_pressed('space'):
-                move_status = self.chessboard.engine_move()
-                if move_status == 1:
-                    self.game_ended = True
-                time.sleep(0.2)  # one move at a time
-        if keyboard.is_pressed('r'):
-            self.chessboard.restart()
-            self.move_from = None
-            self.move_to = None
-            self.game_ended = False
-            time.sleep(0.1)  # one move at a time
-
-    def start_game_visual(self, bot1, bot2, bot1_first=True):
-        # TODO combine start_game and run simulations with 'game' version, and abstract into simulate class
-
-        current_bot = bot1 if bot1_first else bot2
-        next_bot = bot2 if bot1_first else bot1
-        while True:
-            game_ended = current_bot()
-            if game_ended:
-                winner = next_bot.__name__ if self.chessboard.board.is_checkmate() else "Draw"
-                self.game_ended = True
-                self.update_screen()
-                self.game_ended = False
-                self.chessboard.restart()
-                return winner
-            current_bot, next_bot = next_bot, current_bot
-            self.update_screen()
-
-    def run_visual_simulations(self, num_games, bot1, bot2):
-        data = []
-        for i in range(num_games):
-            winner = self.start_game_visual(bot1, bot2)
-            data.append(f"Game result: {winner}\n")
-
-        results = ''.join(data)
-        with open("random_engine_vs_random_engine_results_visual.txt", "a") as log_file:
-            log_file.write(results)
-        self.run()
-
 
 if __name__ == "__main__":
     renderer = Renderer()
-    mode = 'simulate'
-    if mode == 'run':
+    mode = 'play'
+    if mode == 'play':
         renderer.run()
-    if mode == "simulate":
-        bot1 = renderer.chessboard.engine_move
-        bot2 = renderer.chessboard.engine_move_other
-        renderer.run_visual_simulations(20, bot1, bot2)

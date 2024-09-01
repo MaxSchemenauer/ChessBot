@@ -1,10 +1,10 @@
 from game import Game
-from renderer import Renderer
 import time
 import cProfile
 import pstats
 
 from v1_random import v1_Random
+from visual import Visual
 
 
 class Simulate:
@@ -43,7 +43,7 @@ class Simulate:
         bot2_move = bot2.move
 
         if visual:  # sets up renderer to show the game
-            self.renderer = Renderer(self.game)
+            self.renderer = Visual(self.game)
 
         data = []
         for i in range(num_games):
@@ -59,7 +59,7 @@ class Simulate:
 
 if __name__ == "__main__":
     simulate = Simulate()
-    mode = 'program'
+    mode = 'visual'
     bot_1 = v1_Random
     bot_2 = v1_Random
     visual = mode == 'visual'

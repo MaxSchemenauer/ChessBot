@@ -18,6 +18,14 @@ restart_button_rect = None
 quit_button_rect = None
 
 
+def get_square_from_pos(pos):
+    """Convert pixel position to chessboard square."""
+    x, y = pos
+    row = y // SQUARE_SIZE
+    col = x // SQUARE_SIZE
+    return chess.square(col, 7 - row)
+
+
 def load_pieces():
     """Load and scale images for pieces."""
     piece_images = {
@@ -40,12 +48,9 @@ def load_pieces():
     return piece_images
 
 
-class Renderer:
-    def __init__(self, piece_color, game=Game(), engine=v1_Random):
-        if piece_color == 'w':
-            self.piece_color = chess.WHITE
-        else:
-            self.piece_color = chess.BLACK
+class Visual:
+    def __init__(self, game=Game(), engine=v1_Random):
+        self.pause = None
         self.chessboard = game
         self.engine = engine
         self.game_ended = None
@@ -56,18 +61,8 @@ class Renderer:
         self.clock = pygame.time.Clock()
         self.move_from = None
         self.move_to = None
-        self.selected_piece = None
         self.grabbed_piece = None
         self.piece_images = load_pieces()
-
-    def get_square_from_pos(self, pos):
-        """Convert pixel position to chessboard square."""
-        x, y = pos
-        row = y // SQUARE_SIZE
-        col = x // SQUARE_SIZE
-        if self.piece_color == chess.WHITE:
-            row = 7 - row
-        return chess.square(col, row)
 
     def draw_highlight(self, screen, square, highlight, col, row):
         """Helper function to draw highlights on the board."""
@@ -77,10 +72,7 @@ class Renderer:
         """Draw the chessboard and pieces."""
         for row in range(8):
             for col in range(8):
-                if self.piece_color == chess.WHITE:
-                    square = chess.square(col, 7 - row)
-                else:
-                    square = chess.square(col, row)
+                square = chess.square(col, 7 - row)
                 if (row + col) % 2 == 0:  # light square
                     color = LIGHT_BROWN
                     highlight = LIGHT_HIGHLIGHT_COLOR
@@ -94,7 +86,6 @@ class Renderer:
 
                 # draws highlighted squares
                 highlights = [
-                    (self.selected_piece and self.selected_piece[1] == square, highlight),
                     (self.move_to and self.move_to == square, highlight),
                     (self.move_from and self.move_from == square, highlight)]
                 for condition, highlight_color in highlights:
@@ -102,31 +93,13 @@ class Renderer:
                         self.draw_highlight(screen, square, highlight_color, col, row)
 
                 # Draw pieces, doesn't draw dragged piece
-                piece = self.chessboard.get_piece(square)
-                if piece and not (self.grabbed_piece and self.grabbed_piece[1] == square):
+                piece = self.chessboard.get_piece(chess.square(col, 7 - row))
+                if piece:
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
-        # Draw the piece being dragged at the mouse position
-        if self.grabbed_piece:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            screen.blit(self.piece_images[self.grabbed_piece[0].symbol()],
-                        (mouse_x - SQUARE_SIZE // 2, mouse_y - SQUARE_SIZE // 2))
-
         if self.game_ended:
             self.draw_game_end_popup()
-
-    def run(self):
-        while True:
-            if self.game_ended:
-                self.handle_game_end_events()
-            else:
-                if self.chessboard.board.turn != self.piece_color:
-                    self.engine_move()
-                self.handle_events()
-            self.handle_keyboard_events()
-            self.update_screen()
-            self.clock.tick(60)
 
     def update_screen(self):
         self.screen.fill(BLACK)
@@ -139,60 +112,6 @@ class Renderer:
                 pygame.quit()
                 exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                move_status = -1
-                click_pos = self.get_square_from_pos(pygame.mouse.get_pos())  # square from start of a move
-                piece = self.chessboard.get_piece(click_pos)
-                if piece:  # clicked on a piece
-                    if self.selected_piece:  # a piece is already selected, try to move to clicked piece
-                        move_status = self.handle_move(self.selected_piece[1], click_pos)
-                    if move_status == -1:  # if this move failed, select the clicked piece
-                        self.selected_piece = (piece, click_pos)
-                        self.grabbed_piece = (piece, click_pos)
-                else:  # clicked on the board
-                    if self.selected_piece:  # if a piece is selected try to move that piece
-                        self.handle_move(self.selected_piece[1], click_pos)
-                if self.selected_piece:
-                    # TODO; display these moves
-                    self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
-                                        move.from_square == click_pos]  # update legal moves of selected piece
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                click_pos = self.get_square_from_pos(pygame.mouse.get_pos())  # square of mouse click
-                if self.selected_piece:  # if a piece is selected
-                    piece, old_pos = self.selected_piece
-                    if old_pos != click_pos:  # drag and drop, else would be single click
-                        self.handle_move(old_pos, click_pos)
-                self.grabbed_piece = None  # lets go grabbed piece on mouse up
-
-    def handle_move(self, old_pos, new_pos):
-        """
-        handles a move made by a player, automatically responds with current engine
-        @param old_pos: moving from what square (0-63)
-        @param new_pos: moving to what square (0-63)
-        @return: status of the move, -1 if failed, 0 if game ended, 1 otherwise
-        """
-        move = chess.Move(old_pos, new_pos)
-        move_status = self.chessboard.make_move(move)
-        if move_status != -1:  # after valid move no piece should be selected
-            self.selected_piece = None
-            self.move_from = old_pos
-            self.move_to = new_pos
-        if move_status == 1:  # game ended
-            self.game_ended = True
-        return move_status
-
-    def engine_move(self):
-        move_status = self.engine.move(self.chessboard)
-        # Get the start and end squares of the last move
-        last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
-        if last_move:
-            self.move_from = last_move.from_square
-            self.move_to = last_move.to_square
-        if move_status == 1:  # game ended
-            self.game_ended = True
-        return move_status
-
     def handle_keyboard_events(self):
         """
         allows user to make bot play. hold enter to play rapidly, and space to play slowly
@@ -200,16 +119,8 @@ class Renderer:
         :return:
         """
         if not self.game_ended:  # moves stop happening when game ends
-            if keyboard.is_pressed('enter'):
-                move_status = self.engine.move(self.chessboard)
-                if move_status == 1:
-                    self.game_ended = True
-                time.sleep(0.001)  # allows for move spamming
             if keyboard.is_pressed('space'):
-                move_status = self.engine.move(self.chessboard)
-                if move_status == 1:
-                    self.game_ended = True
-                time.sleep(0.2)  # one move at a time
+                self.pause = True
         if keyboard.is_pressed('r'):
             self.chessboard.restart()
             self.move_from = None
@@ -241,15 +152,7 @@ class Renderer:
         self.screen.blit(popup_surface, (rect_x, rect_y))
         pygame.draw.rect(self.screen, border_color, (rect_x, rect_y, rect_width, rect_height), 5)
 
-        # Draw "Renderer Over" text
         font = pygame.font.Font(None, 50)
         game_over_text = font.render("Game Over", True, text_color)
         self.screen.blit(game_over_text, (rect_x + rect_width / 2 - game_over_text.get_width() / 2,
                                           rect_y + rect_height / 2 - game_over_text.get_height() / 2))
-
-
-if __name__ == "__main__":
-    renderer = Renderer(piece_color='w')
-    mode = 'play'
-    if mode == 'play':
-        renderer.run()

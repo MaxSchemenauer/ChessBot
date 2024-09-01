@@ -52,7 +52,6 @@ class Visual:
     def __init__(self, game=Game(), engine=v1_Random):
         self.pause = None
         self.chessboard = game
-        self.engine = engine
         self.game_ended = None
         pygame.init()
         pygame.display.set_caption('Chess AI')
@@ -61,12 +60,34 @@ class Visual:
         self.clock = pygame.time.Clock()
         self.move_from = None
         self.move_to = None
-        self.grabbed_piece = None
         self.piece_images = load_pieces()
 
-    def draw_highlight(self, screen, square, highlight, col, row):
+    @staticmethod
+    def draw_highlight(screen, square, highlight, col, row):
         """Helper function to draw highlights on the board."""
         pygame.draw.rect(screen, highlight, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+    def draw_game_end_popup(self):
+        # Define popup dimensions and colors
+        global restart_button_rect, quit_button_rect
+        rect_width = 300
+        rect_height = 125
+        rect_x = SCREEN_WIDTH / 2 - rect_width / 2
+        rect_y = SCREEN_WIDTH / 2 - rect_height / 2
+        popup_color = (0, 0, 0, 128)  # (R, G, B, A) with A = 128 for 50% transparency
+        border_color = (255, 255, 255)
+        text_color = (255, 255, 255)
+
+        # Create a surface for the popup with an alpha channel (RGBA)
+        popup_surface = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
+        popup_surface.fill(popup_color)
+        self.screen.blit(popup_surface, (rect_x, rect_y))
+        pygame.draw.rect(self.screen, border_color, (rect_x, rect_y, rect_width, rect_height), 5)
+
+        font = pygame.font.Font(None, 50)
+        game_over_text = font.render("Game Over", True, text_color)
+        self.screen.blit(game_over_text, (rect_x + rect_width / 2 - game_over_text.get_width() / 2,
+                                          rect_y + rect_height / 2 - game_over_text.get_height() / 2))
 
     def draw_board(self, screen):
         """Draw the chessboard and pieces."""
@@ -103,8 +124,12 @@ class Visual:
 
     def update_screen(self):
         self.screen.fill(BLACK)
+        self.handle_events()
+        self.handle_keyboard_events()
+        self.update_last_move()
         self.draw_board(self.screen)
         pygame.display.flip()
+        self.delay_game()  # allows time after each move, can use keyboard controls
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -120,39 +145,38 @@ class Visual:
         """
         if not self.game_ended:  # moves stop happening when game ends
             if keyboard.is_pressed('space'):
-                self.pause = True
+                time.sleep(0.25)
+                while not keyboard.is_pressed('space'):
+                    pass
+                time.sleep(0.25)
+
+        # if keyboard.is_pressed('left'):
+        #     print(self.chessboard.board.move_stack)
+        #     self.chessboard.board.pop()
+        #     self.move_from = None
+        #     self.move_to = None
+        #     time.sleep(0.25)
+
         if keyboard.is_pressed('r'):
             self.chessboard.restart()
             self.move_from = None
             self.move_to = None
             self.game_ended = False
-            time.sleep(0.1)  # one move at a time
+            time.sleep(0.1)
 
-    @staticmethod
-    def handle_game_end_events():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+    def update_last_move(self):
+        last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
+        if last_move:
+            self.move_from = last_move.from_square
+            self.move_to = last_move.to_square
 
-    def draw_game_end_popup(self):
-        # Define popup dimensions and colors
-        global restart_button_rect, quit_button_rect
-        rect_width = 300
-        rect_height = 125
-        rect_x = SCREEN_WIDTH / 2 - rect_width / 2
-        rect_y = SCREEN_WIDTH / 2 - rect_height / 2
-        popup_color = (0, 0, 0, 128)  # (R, G, B, A) with A = 128 for 50% transparency
-        border_color = (255, 255, 255)
-        text_color = (255, 255, 255)
+    def delay_game(self):
+        duration = 0.75
+        start_time = time.time()
+        while True:
+            self.handle_events()
+            elapsed_time = time.time() - start_time
+            self.handle_keyboard_events()
+            if elapsed_time > duration:
+                break
 
-        # Create a surface for the popup with an alpha channel (RGBA)
-        popup_surface = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
-        popup_surface.fill(popup_color)
-        self.screen.blit(popup_surface, (rect_x, rect_y))
-        pygame.draw.rect(self.screen, border_color, (rect_x, rect_y, rect_width, rect_height), 5)
-
-        font = pygame.font.Font(None, 50)
-        game_over_text = font.render("Game Over", True, text_color)
-        self.screen.blit(game_over_text, (rect_x + rect_width / 2 - game_over_text.get_width() / 2,
-                                          rect_y + rect_height / 2 - game_over_text.get_height() / 2))

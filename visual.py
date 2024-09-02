@@ -14,6 +14,7 @@ DARK_BROWN = (184, 135, 98, 255)
 DARK_HIGHLIGHT_COLOR = (224, 196, 76)
 LIGHT_HIGHLIGHT_COLOR = (248, 236, 116)
 SQUARE_SIZE = 80
+MOVE_DELAY = 0.5
 restart_button_rect = None
 quit_button_rect = None
 
@@ -52,6 +53,7 @@ class Visual:
     def __init__(self, game=Game(), engine=v1_Random):
         self.pause = None
         self.chessboard = game
+        self.redo_move_stack = []
         self.game_ended = None
         pygame.init()
         pygame.display.set_caption('Chess AI')
@@ -121,6 +123,8 @@ class Visual:
 
         if self.game_ended:
             self.draw_game_end_popup()
+        if self.pause:
+            self.display_pause_text()
 
     def update_screen(self):
         self.screen.fill(BLACK)
@@ -129,9 +133,11 @@ class Visual:
         self.update_last_move()
         self.draw_board(self.screen)
         pygame.display.flip()
-        self.delay_game()  # allows time after each move, can use keyboard controls
+        if not self.pause:
+            self.delay_game()  # allows time after each move, can use keyboard controls
 
-    def handle_events(self):
+    @staticmethod
+    def handle_events():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -144,18 +150,30 @@ class Visual:
         :return:
         """
         if not self.game_ended:  # moves stop happening when game ends
-            if keyboard.is_pressed('space'):
+            if keyboard.is_pressed('space') and not self.pause:  # pauses game, only thing that pauses is the engine
+                self.pause = True
                 time.sleep(0.25)
-                while not keyboard.is_pressed('space'):
-                    pass
+                # resumes game is space is pressed or right arrow is pressed and no moves can be redone
+                while (not keyboard.is_pressed('space') and
+                       not (keyboard.is_pressed('right') and [] == self.redo_move_stack)):
+                    self.update_screen()
                 time.sleep(0.25)
+                self.pause = False
+                self.empty_redo_move_stack()
 
-        # if keyboard.is_pressed('left'):
-        #     print(self.chessboard.board.move_stack)
-        #     self.chessboard.board.pop()
-        #     self.move_from = None
-        #     self.move_to = None
-        #     time.sleep(0.25)
+        if keyboard.is_pressed('left'):
+            if self.chessboard.board.move_stack:
+                self.redo_move_stack.append(self.chessboard.board.pop())
+            self.move_from = None
+            self.move_to = None
+            time.sleep(0.25)
+
+        if keyboard.is_pressed('right'):
+            if self.redo_move_stack:
+                self.chessboard.board.push(self.redo_move_stack.pop())
+            self.move_from = None
+            self.move_to = None
+            time.sleep(0.25)
 
         if keyboard.is_pressed('r'):
             self.chessboard.restart()
@@ -170,8 +188,13 @@ class Visual:
             self.move_from = last_move.from_square
             self.move_to = last_move.to_square
 
+    def empty_redo_move_stack(self):
+        while self.redo_move_stack:
+            self.chessboard.board.push(self.redo_move_stack.pop())
+            self.update_screen()  # allows for game to catch back up with moves that were undone
+
     def delay_game(self):
-        duration = 0.75
+        duration = MOVE_DELAY
         start_time = time.time()
         while True:
             self.handle_events()
@@ -180,3 +203,9 @@ class Visual:
             if elapsed_time > duration:
                 break
 
+    def display_pause_text(self):
+        font = pygame.font.Font(None, 50)
+        pause_text = font.render("paused", True, (255, 255, 255))
+        location = (SCREEN_WIDTH / 2 - pause_text.get_width() / 2,
+                    SCREEN_WIDTH / 2 - pause_text.get_height() / 2)
+        self.screen.blit(pause_text, location)

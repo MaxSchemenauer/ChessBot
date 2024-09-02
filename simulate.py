@@ -59,8 +59,12 @@ class Simulate:
 
 if __name__ == "__main__":
     simulate = Simulate()
-    mode = 'visual'
+    mode = 'nvisual'
     bot_1 = v1_Random
     bot_2 = v1_Random
     visual = mode == 'visual'
-    simulate.run_simulations(50, bot_1, bot_2, visual=visual)
+    profiler = cProfile.Profile()
+    profiler.enable()
+    simulate.run_simulations(100, bot_1, bot_2, visual=visual)
+    profiler.disable()
+    profiler.print_stats(sort='time')

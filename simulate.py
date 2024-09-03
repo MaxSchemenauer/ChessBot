@@ -1,3 +1,5 @@
+import os
+
 from game import Game
 import time
 import cProfile
@@ -18,7 +20,11 @@ class Simulate:
         col_width = max(len(bot1_name), len(bot2_name)) + 2
         header = f"{' Result':<{col_width}}| {bot1_name + ' Color':<{col_width}}\n"
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        with open(f"{bot1_name}_vs_{bot2_name}_results.txt", "a") as log_file:
+        folder = 'simulation_results'
+        if not os.path.exists(folder):
+            os.makedirs(folder, exist_ok=True)
+        path = os.path.join('simulation_results', f"{bot1_name}_vs_{bot2_name}_results.txt")
+        with open(path, "a") as log_file:
             log_file.write(f"Simulation started at: {current_time}\n")
             log_file.write(f"{bot1_name} vs. {bot2_name}\n\n")
             log_file.write(header)

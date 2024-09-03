@@ -47,7 +47,7 @@ class Renderer:
         else:
             self.piece_color = chess.BLACK
         self.chessboard = game
-        self.engine = engine
+        self.engine = engine(game)
         self.game_ended = None
         pygame.init()
         pygame.display.set_caption('Chess AI')
@@ -183,7 +183,7 @@ class Renderer:
         return move_status
 
     def engine_move(self):
-        move_status = self.engine.move(self.chessboard)
+        move_status = self.engine.move()
         # Get the start and end squares of the last move
         last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
         if last_move:
@@ -201,12 +201,12 @@ class Renderer:
         """
         if not self.game_ended:  # moves stop happening when game ends
             if keyboard.is_pressed('enter'):
-                move_status = self.engine.move(self.chessboard)
+                move_status = self.engine.move()
                 if move_status == 1:
                     self.game_ended = True
                 time.sleep(0.001)  # allows for move spamming
             if keyboard.is_pressed('space'):
-                move_status = self.engine.move(self.chessboard)
+                move_status = self.engine.move()
                 if move_status == 1:
                     self.game_ended = True
                 time.sleep(0.2)  # one move at a time

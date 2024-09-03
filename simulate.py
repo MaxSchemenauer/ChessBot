@@ -42,7 +42,7 @@ class Simulate:
         current_bot_name = bot1_name if bot1_white else bot2_name
         next_bot_name = bot2_name if bot1_white else bot1_name
         while True:
-            game_ended = current_bot(self.game)
+            game_ended = current_bot()
             if game_ended:
                 winner = current_bot_name if self.game.board.is_checkmate() else "Draw"
                 if visual:
@@ -58,8 +58,8 @@ class Simulate:
                 self.renderer.update_screen()
 
     def run_simulations(self, num_games, bot1, bot2, visual=False):
-        bot1_name = bot1.__name__
-        bot2_name = bot2.__name__
+        bot1_name = bot1.__class__.__name__
+        bot2_name = bot2.__class__.__name__
         if bot1_name == bot2_name:
             bot2_name += "(1)"
         bot1_move = bot1.move
@@ -88,11 +88,11 @@ class Simulate:
 if __name__ == "__main__":
     simulate = Simulate()
     mode = 'nvisual'
-    bot_1 = v1_Random
-    bot_2 = v1_Random
+    bot_1 = v1_Random(simulate.game)
+    bot_2 = v1_Random(simulate.game)
     visual = mode == 'visual'
     profiler = cProfile.Profile()
-    #profiler.enable()
-    simulate.run_simulations(20, bot_1, bot_2, visual=visual)
-    #profiler.disable()
-    #profiler.print_stats(sort='time')
+    profiler.enable()
+    simulate.run_simulations(100, bot_1, bot_2, visual=visual)
+    profiler.disable()
+    profiler.print_stats(sort='time')

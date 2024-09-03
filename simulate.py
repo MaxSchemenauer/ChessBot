@@ -13,6 +13,23 @@ class Simulate:
         self.game = Game()
         self.renderer = None
 
+    @staticmethod
+    def log_results(bot1_name, bot2_name, data, win_count):
+        col_width = max(len(bot1_name), len(bot2_name)) + 2
+        header = f"{' Result':<{col_width}}| {bot1_name + ' Color':<{col_width}}\n"
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        with open(f"{bot1_name}_vs_{bot2_name}_results.txt", "a") as log_file:
+            log_file.write(f"Simulation started at: {current_time}\n")
+            log_file.write(f"{bot1_name} vs. {bot2_name}\n\n")
+            log_file.write(header)
+            for result in data:
+                log_file.write(f"{result[0]:<{col_width}}|{result[1]:<{col_width}}\n")
+            # Write win count summary
+            log_file.write(f"\n{bot1_name}: {win_count[bot1_name]}\n")
+            log_file.write(f"{bot2_name}: {win_count[bot2_name]}\n")
+            log_file.write(f"Draws: {win_count['Draw']}\n")
+            log_file.write('-' * (col_width * 3 + 2) + '\n')  # Add a separator line
+
     def start_game(self, bot1, bot2, bot1_name, bot2_name, visual=False, bot1_white=True):
         current_bot = bot1 if bot1_white else bot2  # allows for order of start to change, more variety
         next_bot = bot2 if bot1_white else bot1
@@ -38,7 +55,7 @@ class Simulate:
         bot1_name = bot1.__name__
         bot2_name = bot2.__name__
         if bot1_name == bot2_name:
-            bot2_name += "_other"
+            bot2_name += "(1)"
         bot1_move = bot1.move
         bot2_move = bot2.move
 
@@ -46,23 +63,20 @@ class Simulate:
             self.renderer = Visual(self.game)
 
         data = []
+        win_count = {bot1_name: 0, bot2_name: 0, "Draw": 0}
         bot1_white = True
         for i in range(num_games):
             if visual:
                 self.renderer.bot1_white = bot1_white
             if bot1_white:
-                colors = f"White: {bot1_name}, Black: {bot2_name}"
+                color = "White"
             else:
-                colors = f"White: {bot2_name}, Black: {bot1_name}"
+                color = "Black"
             winner = self.start_game(bot1_move, bot2_move, bot1_name, bot2_name, visual, bot1_white)
-            data.append(f"Game result: {winner, colors}\n")
+            win_count[winner] += 1
+            data.append([" " + winner, " " + color])
             bot1_white = not bot1_white
-
-        results = ''.join(data)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        with open(f"{bot1_name}_vs_{bot2_name}_results.txt", "a") as log_file:
-            log_file.write(f"Simulation started at: {current_time}\n")
-            log_file.write(results)
+        self.log_results(bot1_name, bot2_name, data, win_count)
 
 
 if __name__ == "__main__":
@@ -72,7 +86,7 @@ if __name__ == "__main__":
     bot_2 = v1_Random
     visual = mode == 'visual'
     profiler = cProfile.Profile()
-    profiler.enable()
-    simulate.run_simulations(100, bot_1, bot_2, visual=visual)
-    profiler.disable()
-    profiler.print_stats(sort='time')
+    #profiler.enable()
+    simulate.run_simulations(20, bot_1, bot_2, visual=visual)
+    #profiler.disable()
+    #profiler.print_stats(sort='time')

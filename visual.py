@@ -14,17 +14,9 @@ DARK_BROWN = (184, 135, 98, 255)
 DARK_HIGHLIGHT_COLOR = (224, 196, 76)
 LIGHT_HIGHLIGHT_COLOR = (248, 236, 116)
 SQUARE_SIZE = 80
-MOVE_DELAY = 0.5
+MOVE_DELAY = 0
 restart_button_rect = None
 quit_button_rect = None
-
-
-def get_square_from_pos(pos):
-    """Convert pixel position to chessboard square."""
-    x, y = pos
-    row = y // SQUARE_SIZE
-    col = x // SQUARE_SIZE
-    return chess.square(col, 7 - row)
 
 
 def load_pieces():
@@ -52,6 +44,7 @@ def load_pieces():
 class Visual:
     def __init__(self, game=Game(), engine=v1_Random):
         self.pause = None
+        self.bot1_white = False
         self.chessboard = game
         self.redo_move_stack = []
         self.game_ended = None
@@ -68,6 +61,15 @@ class Visual:
     def draw_highlight(screen, square, highlight, col, row):
         """Helper function to draw highlights on the board."""
         pygame.draw.rect(screen, highlight, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+    def get_square_from_pos(self, pos):
+        """Convert pixel position to chessboard square."""
+        x, y = pos
+        row = y // SQUARE_SIZE
+        col = x // SQUARE_SIZE
+        if self.bot1_white:
+            row = 7 - row
+        return chess.square(col, row)
 
     def draw_game_end_popup(self):
         # Define popup dimensions and colors
@@ -95,7 +97,10 @@ class Visual:
         """Draw the chessboard and pieces."""
         for row in range(8):
             for col in range(8):
-                square = chess.square(col, 7 - row)
+                if self.bot1_white:
+                    square = chess.square(col, 7 - row)
+                else:
+                    square = chess.square(col, row)
                 if (row + col) % 2 == 0:  # light square
                     color = LIGHT_BROWN
                     highlight = LIGHT_HIGHLIGHT_COLOR
@@ -115,8 +120,8 @@ class Visual:
                     if condition:
                         self.draw_highlight(screen, square, highlight_color, col, row)
 
-                # Draw pieces, doesn't draw dragged piece
-                piece = self.chessboard.get_piece(chess.square(col, 7 - row))
+                # Draw pieces
+                piece = self.chessboard.get_piece(square)
                 if piece:
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))

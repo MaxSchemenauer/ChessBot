@@ -13,11 +13,11 @@ class Simulate:
         self.game = Game()
         self.renderer = None
 
-    def start_game(self, bot1, bot2, bot1_name, bot2_name, visual=False, bot1_first=True):
-        current_bot = bot1 if bot1_first else bot2  # allows for order of start to change, more variety
-        next_bot = bot2 if bot1_first else bot1
-        current_bot_name = bot1_name
-        next_bot_name = bot2_name
+    def start_game(self, bot1, bot2, bot1_name, bot2_name, visual=False, bot1_white=True):
+        current_bot = bot1 if bot1_white else bot2  # allows for order of start to change, more variety
+        next_bot = bot2 if bot1_white else bot1
+        current_bot_name = bot1_name if bot1_white else bot2_name
+        next_bot_name = bot2_name if bot1_white else bot1_name
         while True:
             game_ended = current_bot(self.game)
             if game_ended:
@@ -46,9 +46,17 @@ class Simulate:
             self.renderer = Visual(self.game)
 
         data = []
+        bot1_white = True
         for i in range(num_games):
-            winner = self.start_game(bot1_move, bot2_move, bot1_name, bot2_name, visual)
-            data.append(f"Game result: {winner}\n")
+            if visual:
+                self.renderer.bot1_white = bot1_white
+            if bot1_white:
+                colors = f"White: {bot1_name}, Black: {bot2_name}"
+            else:
+                colors = f"White: {bot2_name}, Black: {bot1_name}"
+            winner = self.start_game(bot1_move, bot2_move, bot1_name, bot2_name, visual, bot1_white)
+            data.append(f"Game result: {winner, colors}\n")
+            bot1_white = not bot1_white
 
         results = ''.join(data)
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())

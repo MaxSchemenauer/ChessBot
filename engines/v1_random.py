@@ -6,14 +6,15 @@ class v1_Random:
         self.game = game
 
     def move(self):
+        board = self.game.board
         # find legal moves
-        legal_moves = list(self.game.board.legal_moves)
+        legal_moves = list(board.legal_moves)
         if len(legal_moves) == 0:
             return self.game.check_game_state()
 
         # find move
         random_move = random.choice(legal_moves)
-        self.game.board.push(random_move)
+        board.push(random_move)
 
         # return game state
         return self.game.check_game_state()

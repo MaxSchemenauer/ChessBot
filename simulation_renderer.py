@@ -41,7 +41,7 @@ def load_pieces():
     return piece_images
 
 
-class Visual:
+class SimulationRenderer:
     def __init__(self, game=Game(), engine=v1_Random):
         self.pause = None
         self.bot1_white = False

@@ -5,7 +5,7 @@ import time
 import cProfile
 
 from engines.v1_random import v1_Random
-from visual import Visual
+from simulation_renderer import SimulationRenderer
 
 
 class Simulate:
@@ -65,7 +65,7 @@ class Simulate:
         bot2_move = bot2.move
 
         if visual:  # sets up renderer to show the game
-            self.renderer = Visual(self.game)
+            self.renderer = SimulationRenderer(self.game)
 
         data = []
         win_count = {bot1_name: 0, bot2_name: 0, "Draw": 0}

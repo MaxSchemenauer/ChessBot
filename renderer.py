@@ -3,8 +3,8 @@ import chess
 import keyboard
 import time
 
-from v1_random import v1_Random
 from game import Game
+from v2_minimax_eval import v2_Minimax_Eval
 
 SCREEN_WIDTH = 640
 WHITE = (255, 255, 255)
@@ -41,7 +41,7 @@ def load_pieces():
 
 
 class Renderer:
-    def __init__(self, piece_color, game=Game(), engine=v1_Random):
+    def __init__(self, piece_color, game=Game(), engine=v2_Minimax_Eval):
         if piece_color == 'w':
             self.piece_color = chess.WHITE
         else:

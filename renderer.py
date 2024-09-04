@@ -121,8 +121,8 @@ class Renderer:
             if self.game_ended:
                 self.handle_game_end_events()
             else:
-                if self.chessboard.board.turn != self.piece_color:
-                    self.engine_move()
+                # if self.chessboard.board.turn != self.piece_color:
+                #     self.engine_move()
                 self.handle_events()
             self.handle_keyboard_events()
             self.update_screen()
@@ -209,7 +209,7 @@ class Renderer:
                 move_status = self.engine.move()
                 if move_status == 1:
                     self.game_ended = True
-                time.sleep(0.2)  # one move at a time
+                time.sleep(0.5)  # one move at a time
         if keyboard.is_pressed('r'):
             self.chessboard.restart()
             self.move_from = None

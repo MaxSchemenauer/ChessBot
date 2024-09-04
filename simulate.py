@@ -6,6 +6,7 @@ import cProfile
 
 from engines.v1_random import v1_Random
 from simulation_renderer import SimulationRenderer
+from v2_minimax_eval import v2_Minimax_Eval
 
 
 class Simulate:
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     simulate = Simulate()
     mode = 'nvisual'
     bot_1 = v1_Random(simulate.game)
-    bot_2 = v1_Random(simulate.game)
+    bot_2 = v2_Minimax_Eval(simulate.game)
     visual = mode == 'visual'
     profiler = cProfile.Profile()
     profiler.enable()

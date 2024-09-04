@@ -17,34 +17,31 @@ class v2_Minimax_Eval:
     def move(self):
         board = self.game.board
         legal_moves = list(board.legal_moves)
+        random.shuffle(legal_moves)
         if len(legal_moves) == 0:
             return self.game.check_game_state()
-
         maximizing = board.turn
-        if maximizing:
-            best_eval = float('-inf')
-        else:
-            best_eval = float('inf')
-        # start search
+        # if not maximizing:
+        #     # print("color black")
+        best_eval = float('-inf')
         best_move = legal_moves[0]
         for move in legal_moves:
             board.push(move)
-            eval = self.evaluate_board(board)
-            print("Eval", move, eval)
-            move = board.pop()
-            if maximizing and eval > best_eval:
+            eval = self.evaluate_board(board, maximizing)
+            if not maximizing:
+                eval = -eval
+            # print(move, eval)
+            if eval > best_eval:
+                # print("best eval was", best_eval, "is now", eval)
+                # print("best move is", best_move)
                 best_move = move
                 best_eval = eval
-            elif not maximizing and eval < best_eval:
-                print("best Eval", move, best_eval)
-                best_move = move
-                best_eval = eval
+            board.pop()
 
         board.push(best_move)
-        print("Bot played", best_move)
         return self.game.check_game_state()
 
-    def evaluate_board(self, board):
+    def evaluate_board(self, board, maximizing):
         score = 0
         for piece_type in chess.PIECE_TYPES:
             for square in board.pieces(piece_type, chess.WHITE):
@@ -52,5 +49,6 @@ class v2_Minimax_Eval:
             for square in board.pieces(piece_type, chess.BLACK):
                 score -= piece_values[piece_type]
             if board.is_checkmate():
-                score += 100000
+                val = float('inf') if maximizing else float('-inf')
+                score += val
         return score

@@ -1,0 +1,8 @@
+bitboards:
+board.pieces(piece_type, color): Returns a bitboard of all pieces of the specified type and color.
+board.occupied_co(color): Returns a bitboard of all squares occupied by pieces of the specified color.
+board.attackers(color, square): Returns a bitboard of all pieces of the specified color that attack the given square.
+board.attacks(square): Returns a bitboard of all squares attacked by the piece on the given square.
+board.is_attacked_by(color, square): Returns True if the given square is attacked by any piece of the specified color.
+board.occupied: Returns a bitboard of all occupied squares.
+board.empty: Returns a bitboard of all empty squares.

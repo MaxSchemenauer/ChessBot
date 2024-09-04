@@ -3,7 +3,7 @@ import chess
 import keyboard
 import time
 
-from v1_random import v1_Random
+from engines.v1_random import v1_Random
 from game import Game
 
 SCREEN_WIDTH = 640

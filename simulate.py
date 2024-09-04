@@ -3,9 +3,8 @@ import os
 from game import Game
 import time
 import cProfile
-import pstats
 
-from v1_random import v1_Random
+from engines.v1_random import v1_Random
 from visual import Visual
 
 

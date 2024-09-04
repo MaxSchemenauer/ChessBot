@@ -18,3 +18,6 @@ class v1_Random:
 
         # return game state
         return self.game.check_game_state()
+
+    def reset(self):
+        pass

@@ -14,7 +14,7 @@ DARK_BROWN = (184, 135, 98, 255)
 DARK_HIGHLIGHT_COLOR = (224, 196, 76)
 LIGHT_HIGHLIGHT_COLOR = (248, 236, 116)
 SQUARE_SIZE = 80
-MOVE_DELAY = 0
+MOVE_DELAY = 0.5
 restart_button_rect = None
 quit_button_rect = None
 
@@ -214,3 +214,20 @@ class SimulationRenderer:
         location = (SCREEN_WIDTH / 2 - pause_text.get_width() / 2,
                     SCREEN_WIDTH / 2 - pause_text.get_height() / 2)
         self.screen.blit(pause_text, location)
+
+
+def replay_game(uci_moves):
+    rend = SimulationRenderer()
+    i = 0
+    while True:
+        if i > len(uci_moves):
+            pass
+        else:
+            rend.chessboard.board.push(chess.Move.from_uci(uci_moves[i]))
+            i += 1
+        rend.update_screen()
+
+
+if __name__ == "__main__":
+    uci_list = []
+    replay_game(uci_list)

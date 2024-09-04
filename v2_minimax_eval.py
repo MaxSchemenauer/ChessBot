@@ -20,7 +20,8 @@ class v2_Minimax_Eval:
         if len(legal_moves) == 0:
             return self.game.check_game_state()
 
-        if board.turn:
+        maximizing = board.turn
+        if maximizing:
             best_eval = float('-inf')
         else:
             best_eval = float('inf')
@@ -30,11 +31,12 @@ class v2_Minimax_Eval:
             board.push(move)
             eval = self.evaluate_board(board)
             print("Eval", move, eval)
-            board.pop()
-            if board.turn and eval > best_eval:
+            move = board.pop()
+            if maximizing and eval > best_eval:
                 best_move = move
                 best_eval = eval
-            elif eval < best_eval:
+            elif not maximizing and eval < best_eval:
+                print("best Eval", move, best_eval)
                 best_move = move
                 best_eval = eval
 
@@ -49,4 +51,6 @@ class v2_Minimax_Eval:
                 score += piece_values[piece_type]
             for square in board.pieces(piece_type, chess.BLACK):
                 score -= piece_values[piece_type]
+            if board.is_checkmate():
+                score += 100000
         return score

@@ -10,8 +10,11 @@ import chess
 piece_values = {1: 1, 2: 3, 3: 3, 4: 5, 5: 9, 6: 100}
 
 
-class v2_Minimax_Eval:
+class v2_Eval:
     def __init__(self, game):
+        """
+        Basic Evaluation, prioritizes checkmate, correctly values draws as 0
+        """
         self.game = game
         self.position_counts = {}
 

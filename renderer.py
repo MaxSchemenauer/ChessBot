@@ -5,6 +5,7 @@ import time
 
 from game import Game
 from engines.v2_eval import v2_Eval
+from v3_minimax import v3_Minimax
 
 SCREEN_WIDTH = 640
 WHITE = (255, 255, 255)
@@ -41,7 +42,7 @@ def load_pieces():
 
 
 class Renderer:
-    def __init__(self, piece_color, game=Game(), engine=v2_Eval):
+    def __init__(self, piece_color, game=Game(), engine=v3_Minimax):
         if piece_color == 'w':
             self.piece_color = chess.WHITE
         else:
@@ -130,8 +131,15 @@ class Renderer:
 
     def update_screen(self):
         self.screen.fill(BLACK)
+        self.update_last_move()
         self.draw_board(self.screen)
         pygame.display.flip()
+
+    def update_last_move(self):
+        last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
+        if last_move:
+            self.move_from = last_move.from_square
+            self.move_to = last_move.to_square
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -209,7 +217,7 @@ class Renderer:
                 move_status = self.engine.move()
                 if move_status == 1:
                     self.game_ended = True
-                time.sleep(0.5)  # one move at a time
+                time.sleep(0.25)  # one move at a time
         if keyboard.is_pressed('r'):
             self.chessboard.restart()
             self.move_from = None

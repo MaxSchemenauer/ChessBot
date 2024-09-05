@@ -6,6 +6,7 @@ from game import Game
 import time
 
 from engines.v1_random import v1_Random
+from engines.v2_eval import v2_Eval
 from simulation_renderer import SimulationRenderer
 
 

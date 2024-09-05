@@ -4,7 +4,7 @@ import keyboard
 import time
 
 from game import Game
-from v2_eval import v2_Eval
+from engines.v2_eval import v2_Eval
 
 SCREEN_WIDTH = 640
 WHITE = (255, 255, 255)

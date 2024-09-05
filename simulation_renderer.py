@@ -220,7 +220,7 @@ def replay_game(uci_moves):
     rend = SimulationRenderer()
     i = 0
     while True:
-        if i > len(uci_moves):
+        if i > len(uci_moves)-1:
             pass
         else:
             rend.chessboard.board.push(chess.Move.from_uci(uci_moves[i]))
@@ -229,5 +229,7 @@ def replay_game(uci_moves):
 
 
 if __name__ == "__main__":
-    uci_list = []
+    uci_list = ['g1h3', 'c7c5', 'b2b4', 'd7d5', 'b4c5', 'd5d4', 'f2f4', 'c8h3', 'g2h3', 'e7e6', 'a2a3', 'b7b5', 'c5b6', 'f8e7', 'b6a7', 'e7h4']
+    print(len(uci_list))
+    MOVE_DELAY = 0.01
     replay_game(uci_list)

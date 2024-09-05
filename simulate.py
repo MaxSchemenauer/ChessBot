@@ -9,7 +9,7 @@ import io
 
 from engines.v1_random import v1_Random
 from simulation_renderer import SimulationRenderer
-from v2_minimax_eval import v2_Minimax_Eval
+from v2_eval import v2_Eval
 
 
 class Simulate:
@@ -108,9 +108,9 @@ if __name__ == "__main__":
     mode = 'nvisual'
     visual = mode == 'visual'
     bot_1 = v1_Random(simulate.game)
-    bot_2 = v2_Minimax_Eval(simulate.game)
+    bot_2 = v2_Eval(simulate.game)
     # profiler = cProfile.Profile()
     # profiler.enable()
-    simulate.run_simulations(10, bot_1, bot_2, visual=visual)
+    simulate.run_simulations(1000, bot_1, bot_2, visual=visual)
     # profiler.disable()
     # profiler.print_stats(sort='time')

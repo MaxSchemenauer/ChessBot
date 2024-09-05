@@ -1,6 +1,4 @@
-import pygame
 import chess
-import random
 
 
 class Game:
@@ -49,22 +47,13 @@ class Game:
             "is_fifty_moves": "Fifty-Move Rule Draw",
             "can_claim_threefold_repetition": "Threefold Repetition Draw"
         }
+        # if self.board.is_game_over():
         for state, message in game_states.items():
             if getattr(self.board, f'{state}')():
-                if state == "checkmate":
-                    winner = "Black" if self.board.turn else "White"
-                    print(message.format(winner=winner))
-                    return 1
                 print(message)
                 return 1
         return 0
 
-
     def restart(self):
         """Logs the winner and resets the board for a new game."""
         self.board.reset()
-        print("The game has been restarted.")
-
-
-
-

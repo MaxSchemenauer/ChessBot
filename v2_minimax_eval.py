@@ -46,7 +46,7 @@ class v2_Minimax_Eval:
         if board.is_checkmate():
             return float('inf')
         if board.is_stalemate() or self.is_potential_threefold_repetition(board):
-            score = 0
+            return 0
 
         for piece_type in chess.PIECE_TYPES:
             for square in board.pieces(piece_type, chess.WHITE):

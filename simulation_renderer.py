@@ -224,6 +224,7 @@ def replay_game(uci_moves):
             pass
         else:
             rend.chessboard.board.push(chess.Move.from_uci(uci_moves[i]))
+            rend.chessboard.check_game_state()
             i += 1
         rend.update_screen()
 

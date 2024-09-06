@@ -47,8 +47,9 @@ class Renderer:
             self.piece_color = chess.WHITE
         else:
             self.piece_color = chess.BLACK
-        self.chessboard = game
-        self.engine = engine(game)
+        self.game = game
+        self.white_engine = engine(game)
+        self.black_engine = engine(game)
         self.game_ended = None
         pygame.init()
         pygame.display.set_caption('Chess AI')
@@ -103,7 +104,7 @@ class Renderer:
                         self.draw_highlight(screen, square, highlight_color, col, row)
 
                 # Draw pieces, doesn't draw dragged piece
-                piece = self.chessboard.get_piece(square)
+                piece = self.game.get_piece(square)
                 if piece and not (self.grabbed_piece and self.grabbed_piece[1] == square):
                     piece_image = self.piece_images[piece.symbol()]
                     screen.blit(piece_image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
@@ -122,7 +123,7 @@ class Renderer:
             if self.game_ended:
                 self.handle_game_end_events()
             else:
-                # if self.chessboard.board.turn != self.piece_color:
+                # if self.game.board.turn != self.piece_color:
                 #     self.engine_move()
                 self.handle_events()
             self.handle_keyboard_events()
@@ -136,7 +137,7 @@ class Renderer:
         pygame.display.flip()
 
     def update_last_move(self):
-        last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
+        last_move = self.game.board.move_stack[-1] if self.game.board.move_stack else None
         if last_move:
             self.move_from = last_move.from_square
             self.move_to = last_move.to_square
@@ -150,7 +151,7 @@ class Renderer:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 move_status = -1
                 click_pos = self.get_square_from_pos(pygame.mouse.get_pos())  # square from start of a move
-                piece = self.chessboard.get_piece(click_pos)
+                piece = self.game.get_piece(click_pos)
                 if piece:  # clicked on a piece
                     if self.selected_piece:  # a piece is already selected, try to move to clicked piece
                         move_status = self.handle_move(self.selected_piece[1], click_pos)
@@ -162,7 +163,7 @@ class Renderer:
                         self.handle_move(self.selected_piece[1], click_pos)
                 if self.selected_piece:
                     # TODO; display these moves
-                    self.legal_moves = [move.to_square for move in self.chessboard.board.legal_moves if
+                    self.legal_moves = [move.to_square for move in self.game.board.legal_moves if
                                         move.from_square == click_pos]  # update legal moves of selected piece
 
             elif event.type == pygame.MOUSEBUTTONUP:
@@ -181,7 +182,7 @@ class Renderer:
         @return: status of the move, -1 if failed, 0 if game ended, 1 otherwise
         """
         move = chess.Move(old_pos, new_pos)
-        move_status = self.chessboard.make_move(move)
+        move_status = self.game.make_move(move)
         if move_status != -1:  # after valid move no piece should be selected
             self.selected_piece = None
             self.move_from = old_pos
@@ -191,9 +192,13 @@ class Renderer:
         return move_status
 
     def engine_move(self):
-        move_status = self.engine.move()
+        if self.game.board.turn:
+            move_status = self.white_engine.move() # white moves if its whites turn
+        else:
+            move_status = self.black_engine.move()  # black moves if its blacks turn
+
         # Get the start and end squares of the last move
-        last_move = self.chessboard.board.move_stack[-1] if self.chessboard.board.move_stack else None
+        last_move = self.game.board.move_stack[-1] if self.game.board.move_stack else None
         if last_move:
             self.move_from = last_move.from_square
             self.move_to = last_move.to_square
@@ -209,17 +214,17 @@ class Renderer:
         """
         if not self.game_ended:  # moves stop happening when game ends
             if keyboard.is_pressed('enter'):
-                move_status = self.engine.move()
+                move_status = self.engine_move()
                 if move_status == 1:
                     self.game_ended = True
                 time.sleep(0.001)  # allows for move spamming
             if keyboard.is_pressed('space'):
-                move_status = self.engine.move()
+                move_status = self.engine_move()
                 if move_status == 1:
                     self.game_ended = True
                 time.sleep(0.25)  # one move at a time
         if keyboard.is_pressed('r'):
-            self.chessboard.restart()
+            self.game.restart()
             self.move_from = None
             self.move_to = None
             self.game_ended = False

@@ -6,3 +6,6 @@ board.attacks(square): Returns a bitboard of all squares attacked by the piece o
 board.is_attacked_by(color, square): Returns True if the given square is attacked by any piece of the specified color.
 board.occupied: Returns a bitboard of all occupied squares.
 board.empty: Returns a bitboard of all empty squares.
+
+board.fen(): entire fen string (Piece Placement, Active Color, Castling Availability, En Passant Target Square, Half-move Clock, Full-move Number)
+board.board_fen(): just the boards position, (Piece Placement)

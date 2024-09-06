@@ -1,5 +1,7 @@
+import cProfile
 import random
 import chess
+import time
 
 # Pawn: chess.PAWN (1)
 # Knight: chess.KNIGHT (2)
@@ -29,7 +31,15 @@ class v3_Minimax:
 
         self.best_move = None
         # TODO; check time on eval mate vs search mate
-        self.best_eval = self.search(board, depth=4)
+        start = time.time()
+        print("starting search")
+        # profiler = cProfile.Profile()
+        # profiler.enable()
+        self.best_eval = self.search(board, depth=4, alpha=float('-inf'), beta=float('inf'))
+        end = time.time()
+        print("move took", end - start, "seconds")
+        # profiler.disable()
+        # profiler.print_stats(sort='time')
 
         if self.best_move is None:  # if no move happens to be found, use a random one
             moves = list(board.legal_moves)
@@ -43,32 +53,31 @@ class v3_Minimax:
 
         return self.game.check_game_state()
 
-    def search(self, board, depth, last_move=None):
+    def search(self, board, depth, alpha, beta):
         if depth == 0:  # evaluate
             return self.evaluate(board)
 
-        moves = list(board.legal_moves)
-        random.shuffle(moves)
-        if len(moves) == 0:
-            print("zero")
+        moves = board.legal_moves
+
+        if not moves:
             if board.is_checkmate():  # checkmate is the worst outcome
                 return float('-inf')
-            if board.is_stalemate() or self.is_potential_threefold_repetition(board):
-                return 0  # is a draw
+        # if board.is_stalemate() or self.is_potential_threefold_repetition(board):
+        #     return -100  # is a draw
 
         best_eval = float('-inf')
         for move in moves:
             board.push(move)
-            #print("\nevaluating" if depth==2 else f"\tresponse to {last_move}", move)
-            eval = -self.search(board, depth - 1, last_move=move)
+            eval = -self.search(board, depth - 1, -beta, -alpha)
+            board.pop()
             if eval > best_eval:
                 best_eval = eval
                 if depth == 4:
                     self.best_move = move
-            if depth == 4:
-                pass
-                print("my move results:", move, eval)
-            board.pop()
+            alpha = max(alpha, eval)
+            if alpha >= beta:
+                break  # Alpha-beta pruning
+
         return best_eval
 
     def evaluate(self, board):
@@ -78,16 +87,22 @@ class v3_Minimax:
         #     return float('-inf')
         # if board.is_stalemate() or self.is_potential_threefold_repetition(board):
         #     return 0  # is a draw, regardless of other heuristics
+        score = 0
+        piece_map = board.piece_map()
 
-        for piece_type in chess.PIECE_TYPES:
-            for square in board.pieces(piece_type, chess.WHITE):
-                score += piece_values[piece_type]
-            for square in board.pieces(piece_type, chess.BLACK):
-                score -= piece_values[piece_type]
-        if not board.turn:  # if is blacks turn
-            score = -score
-        #print("\tscore", score)
-        return score
+        if board.is_stalemate() or self.is_potential_threefold_repetition(board):
+            print("threefold detected")
+            return -1  # is a draw
+
+        for square, piece in piece_map.items():
+            # Add or subtract piece value depending on color
+            value = piece_values[piece.piece_type]
+            if piece.color == chess.WHITE:
+                score += value
+            else:
+                score -= value
+
+        return score if board.turn else -score
 
     def is_potential_threefold_repetition(self, board):
         fen = board.fen()

@@ -10,72 +10,95 @@ import chess
 piece_values = {1: 1, 2: 3, 3: 3, 4: 5, 5: 9, 6: 100}
 
 
-class v2_Eval:
+class v3_Minimax:
     def __init__(self, game):
         """
         Basic Evaluation, prioritizes checkmate, correctly values draws as 0
         """
+        self.best_move = None
+        self.best_eval = None
         self.game = game
         self.position_counts = {}
 
     def move(self):
+        """
+        begins search. sets up board and gets legal moves
+        """
         board = self.game.board
-        legal_moves = list(board.legal_moves)
-        random.shuffle(legal_moves)
-        if len(legal_moves) == 0:
-            return self.game.check_game_state()
+        self.update_position_counts(board)  # update to get opponents moves
 
-        is_white = board.turn
-        best_eval = float('-inf')
-        best_move = legal_moves[0]
-        self.update_position_counts(board)  # update to get move opponent played
+        self.best_move = None
+        # TODO; check time on eval mate vs search mate
+        self.best_eval = self.search(board, depth=4)
 
-        for move in legal_moves:
-            board.push(move)
-            self.update_position_counts(board)  # update to get move we're testing
-            eval = self.evaluate_board(board, is_white)
-            self.update_position_counts(board, decrement=True)  # remove tested move
-            if eval > best_eval:
-                best_move = move
-                best_eval = eval
-            board.pop()
+        if self.best_move is None:  # if no move happens to be found, use a random one
+            moves = list(board.legal_moves)
+            random.shuffle(moves)
+            board.push(moves[0])
+        else:
+            board.push(self.best_move)
 
-        board.push(best_move)
-        self.update_position_counts(board)  # update with move bot played
+        print(self.best_move, self.best_eval)
+        self.update_position_counts(board)  # update for this move
+
         return self.game.check_game_state()
 
-    def evaluate_board(self, board, is_white):
+    def search(self, board, depth, last_move=None):
+        if depth == 0:  # evaluate
+            return self.evaluate(board)
+
+        moves = list(board.legal_moves)
+        random.shuffle(moves)
+        if len(moves) == 0:
+            print("zero")
+            if board.is_checkmate():  # checkmate is the worst outcome
+                return float('-inf')
+            if board.is_stalemate() or self.is_potential_threefold_repetition(board):
+                return 0  # is a draw
+
+        best_eval = float('-inf')
+        for move in moves:
+            board.push(move)
+            #print("\nevaluating" if depth==2 else f"\tresponse to {last_move}", move)
+            eval = -self.search(board, depth - 1, last_move=move)
+            if eval > best_eval:
+                best_eval = eval
+                if depth == 4:
+                    self.best_move = move
+            if depth == 4:
+                pass
+                print("my move results:", move, eval)
+            board.pop()
+        return best_eval
+
+    def evaluate(self, board):
         score = 0
-        if board.is_checkmate():
-            return float('inf')
-        if board.is_stalemate() or self.is_potential_threefold_repetition(board):
-            return 0
+        # if board.is_checkmate():  # checkmate for is the best outcome
+        #     print("eval mate")
+        #     return float('-inf')
+        # if board.is_stalemate() or self.is_potential_threefold_repetition(board):
+        #     return 0  # is a draw, regardless of other heuristics
 
         for piece_type in chess.PIECE_TYPES:
             for square in board.pieces(piece_type, chess.WHITE):
                 score += piece_values[piece_type]
             for square in board.pieces(piece_type, chess.BLACK):
                 score -= piece_values[piece_type]
-        if not is_white:
+        if not board.turn:  # if is blacks turn
             score = -score
+        #print("\tscore", score)
         return score
 
     def is_potential_threefold_repetition(self, board):
         fen = board.fen()
         return self.position_counts.get(fen, 0) >= 2
 
-    def update_position_counts(self, board, decrement=False):
+    def update_position_counts(self, board):
         fen = board.fen()
-        if decrement:
-            if fen in self.position_counts:
-                self.position_counts[fen] -= 1
-                if self.position_counts[fen] == 0:
-                    del self.position_counts[fen]
+        if fen in self.position_counts:
+            self.position_counts[fen] += 1
         else:
-            if fen in self.position_counts:
-                self.position_counts[fen] += 1
-            else:
-                self.position_counts[fen] = 1
+            self.position_counts[fen] = 1
 
     def reset(self):
         self.position_counts = {}

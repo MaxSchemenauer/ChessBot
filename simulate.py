@@ -8,6 +8,7 @@ import time
 from engines.v1_random import v1_Random
 from engines.v2_eval import v2_Eval
 from simulation_renderer import SimulationRenderer
+from v3_minimax import v3_Minimax
 
 
 class Simulate:
@@ -47,8 +48,7 @@ class Simulate:
         while True:
             game_ended = current_bot()
             if game_ended:
-                # helping me detect likelihood a bot will draw
-                print(current_bot_name, "had last move")
+                # print(current_bot_name, "had last move")  # helping me detect likelihood a bot will draw
                 winner = current_bot_name if self.game.board.is_checkmate() else "Draw"
                 if visual:
                     self.renderer.game_ended = True
@@ -105,11 +105,13 @@ if __name__ == "__main__":
     simulate = Simulate()
     mode = 'nvisual'
     visual = mode == 'visual'
-    bot_1 = v1_Random(simulate.game)
-    # bot_2 = v2_Eval(simulate.game)
-    bot_2 = v1_Random(simulate.game)
+    bot_1 = v2_Eval(simulate.game)
+    bot_2 = v3_Minimax(simulate.game)
     # profiler = cProfile.Profile()
     # profiler.enable()
-    simulate.run_simulations(1000, bot_1, bot_2, visual=visual)
+    start = time.time()
+    simulate.run_simulations(200, bot_1, bot_2, visual=visual)
+    end = time.time()
+    print("Simulation took", (end - start), "seconds.")
     # profiler.disable()
     # profiler.print_stats(sort='time')

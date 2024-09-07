@@ -106,12 +106,12 @@ if __name__ == "__main__":
     simulate = Simulate()
     mode = 'nvisual'
     visual = mode == 'visual'
-    bot_1 = v3_Minimax(simulate.game)
+    bot_1 = v2_Eval(simulate.game)
     bot_2 = v3_Minimax(simulate.game)
     # profiler = cProfile.Profile()
     # profiler.enable()
     #start = time.time()
-    simulate.run_simulations(1, bot_1, bot_2, visual=visual)
+    simulate.run_simulations(2, bot_1, bot_2, visual=visual)
     # = time.time()
     # print("Simulation took", (end - start), "seconds.")
     # profiler.disable()

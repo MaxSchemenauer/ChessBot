@@ -29,8 +29,14 @@ class v3_Minimax:
         begins search. sets up board and gets legal moves
         """
         #print("\nstarting search")
-        start = time.time()
+        # profiler = cProfile.Profile()
+        # profiler.enable()
+        # start = time.time()
         board = self.game.board
+        if board.turn:
+            print("white to move")
+        else:
+            print("black to move")
         self.update_position_counts(board)  # update to get opponents moves
         self.positions_evaluated = 0
         self.best_move = None
@@ -45,43 +51,46 @@ class v3_Minimax:
             board.push(self.best_move)
 
         self.update_position_counts(board)  # update for this move
-        end = time.time()
-        self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
-        print(self.time_and_positions[-1])
+        # end = time.time()
+        # profiler.disable()
+        # profiler.print_stats(sort='time')
+        # self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
+        # print(self.time_and_positions[-1])
+        # print()
         return self.game.check_game_state()
 
     def search(self, board, ply_remaining, ply_from_root, alpha, beta):
         moves = board.legal_moves
         if not moves:
             if board.is_checkmate():  # checkmate is the worst outcome
-                self.positions_evaluated += 1  # early eval
                 return float('-inf')
             else:  # stalemate, or another form of draw
                 return 0
         if ply_from_root > 0:
             if self.is_potential_threefold_repetition(board):
-                self.positions_evaluated += 1  # early eval
-                return -66
+                return 0  # discourage threefold repetition
         if ply_remaining == 0:  # evaluate
-            self.positions_evaluated += 1  # early eval
             return self.evaluate(board)
 
-        best_eval = float('-inf')
         for move in moves:
             board.push(move)
+            self.positions_evaluated += 1  # early eval
             eval = -self.search(board, ply_remaining - 1, ply_from_root + 1, -beta, -alpha)
+            fen = board.board_fen()
             board.pop()
-            if eval > best_eval:
-                best_eval = eval
-                if ply_remaining == 4:
-                    self.best_move = move  # assigns best move at top level
-            if ply_remaining == 4:
-                print(move, eval)
-            alpha = max(alpha, eval)
-            if alpha >= beta:
-                break  # Alpha-beta pruning
+            # Move was *too* good, opponent will choose a different move earlier on to avoid this position.
+            if eval >= beta:
+                return beta
+            if eval > alpha:
+                alpha = eval
+                if ply_from_root == 0:
+                    self.best_move = move
+            # debug
+            if ply_from_root == 0:
+                print(move, alpha, fen)
+        return alpha
 
-        return best_eval
+# moves = sorted(board.legal_moves, key=lambda move: board.is_capture(move), reverse=True)
 
     @staticmethod
     def evaluate(board):
@@ -108,8 +117,8 @@ class v3_Minimax:
             self.position_counts[fen] = 1
 
     def reset(self):
-        times = [time for _, time, _ in self.time_and_positions]
-        print("average time per move:", sum(times) / len(times))
+        # times = [time for _, time, _ in self.time_and_positions]
+        # print("average time per move:", sum(times) / len(times))
         self.position_counts = {}
         self.time_and_positions = []
         self.positions_evaluated = 0

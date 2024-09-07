@@ -225,6 +225,8 @@ class Renderer:
                 time.sleep(0.25)  # one move at a time
         if keyboard.is_pressed('r'):
             self.game.restart()
+            self.white_engine.reset()
+            self.black_engine.reset()
             self.move_from = None
             self.move_to = None
             self.game_ended = False

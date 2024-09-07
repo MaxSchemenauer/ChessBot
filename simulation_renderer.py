@@ -14,7 +14,7 @@ DARK_BROWN = (184, 135, 98, 255)
 DARK_HIGHLIGHT_COLOR = (224, 196, 76)
 LIGHT_HIGHLIGHT_COLOR = (248, 236, 116)
 SQUARE_SIZE = 80
-MOVE_DELAY = 0.5
+MOVE_DELAY = 00
 restart_button_rect = None
 quit_button_rect = None
 
@@ -232,5 +232,5 @@ def replay_game(uci_moves):
 if __name__ == "__main__":
     uci_list = []
     print(len(uci_list))
-    MOVE_DELAY = 0.5
+    MOVE_DELAY = 00
     replay_game(uci_list)

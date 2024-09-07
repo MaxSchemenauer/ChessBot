@@ -104,7 +104,7 @@ class Simulate:
 
 if __name__ == "__main__":
     simulate = Simulate()
-    mode = 'nvisual'
+    mode = 'visual'
     visual = mode == 'visual'
     bot_1 = v2_Eval(simulate.game)
     bot_2 = v3_Minimax(simulate.game)

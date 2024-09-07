@@ -31,7 +31,7 @@ class v3_Minimax:
         #print("\nstarting search")
         # profiler = cProfile.Profile()
         # profiler.enable()
-        # start = time.time()
+        start = time.time()
         board = self.game.board
         if board.turn:
             print("white to move")
@@ -44,39 +44,40 @@ class v3_Minimax:
         self.best_eval = self.search(board, ply_remaining=4, ply_from_root=0, alpha=float('-inf'), beta=float('inf'))
 
         if self.best_move is None:  # if no move happens to be found, use a random one
+            print("random")
             moves = list(board.legal_moves)
             random.shuffle(moves)
+            self.best_move = moves[0]
             board.push(moves[0])
         else:
             board.push(self.best_move)
 
         self.update_position_counts(board)  # update for this move
-        # end = time.time()
+        end = time.time()
         # profiler.disable()
         # profiler.print_stats(sort='time')
-        # self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
-        # print(self.time_and_positions[-1])
-        # print()
+        self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
+        print(self.time_and_positions[-1])
         return self.game.check_game_state()
 
-    def search(self, board, ply_remaining, ply_from_root, alpha, beta):
-        moves = board.legal_moves
+    def search(self, board, ply_remaining, ply_from_root, alpha, beta, last_move=None):
+
+        moves = sorted(board.legal_moves, key=lambda move: board.is_capture(move), reverse=True)
         if not moves:
             if board.is_checkmate():  # checkmate is the worst outcome
                 return float('-inf')
             else:  # stalemate, or another form of draw
                 return 0
         if ply_from_root > 0:
-            if self.is_potential_threefold_repetition(board):
+            if self.is_potential_threefold_repetition(board) or board.is_fifty_moves():
                 return 0  # discourage threefold repetition
         if ply_remaining == 0:  # evaluate
             return self.evaluate(board)
 
         for move in moves:
             board.push(move)
-            self.positions_evaluated += 1  # early eval
+            self.positions_evaluated += 1
             eval = -self.search(board, ply_remaining - 1, ply_from_root + 1, -beta, -alpha)
-            fen = board.board_fen()
             board.pop()
             # Move was *too* good, opponent will choose a different move earlier on to avoid this position.
             if eval >= beta:
@@ -86,17 +87,17 @@ class v3_Minimax:
                 if ply_from_root == 0:
                     self.best_move = move
             # debug
-            if ply_from_root == 0:
-                print(move, alpha, fen)
+            # indent = '\t' * ply_from_root
+            # if ply_from_root == 0:
+            #     indent = indent + 'final evaluation'
+            # print(indent, move, alpha)
         return alpha
 
-# moves = sorted(board.legal_moves, key=lambda move: board.is_capture(move), reverse=True)
 
     @staticmethod
     def evaluate(board):
-        score = 0
         piece_map = board.piece_map()
-
+        score = 0
         for square, piece in piece_map.items():
             # Add or subtract piece value depending on color
             value = piece_values[piece.piece_type]
@@ -104,7 +105,8 @@ class v3_Minimax:
                 score += value
             else:
                 score -= value
-        return score if board.turn else -score
+        eval = score if board.turn else -score
+        return eval
 
     def is_potential_threefold_repetition(self, board):
         return board.board_fen() in self.position_counts

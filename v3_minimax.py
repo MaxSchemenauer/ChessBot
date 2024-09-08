@@ -19,7 +19,6 @@ class v3_Minimax:
         """
         self.best_move = None
         self.best_eval = None
-        self.white = None
         self.game = game
         self.position_counts = {}
         self.time_and_positions = []
@@ -29,17 +28,10 @@ class v3_Minimax:
         """
         begins search. sets up board and gets legal moves
         """
-        #print("\nstarting search")
         # profiler = cProfile.Profile()
         # profiler.enable()
         start = time.time()
         board = self.game.board
-        if board.turn:
-            self.white = True
-            print("white to move")
-        else:
-            self.white = False
-            print("black to move")
         self.update_position_counts(board)  # update to get opponents moves
         self.positions_evaluated = 0
         self.best_move = None
@@ -50,20 +42,8 @@ class v3_Minimax:
             print("random")
             moves = list(board.legal_moves)
             random.shuffle(moves)
-            i=0
-            board.push(moves[i])
-            while True:
-                if board.is_stalemate():
-                    print("stalemate")
-                    board.pop()
-                    i += 1
-                else:
-                    break
-            self.best_move = moves[i]
-            if self.best_move is None:
-                return moves[i]  # stalemate is only option
-        else:
-            board.push(self.best_move)
+            self.best_move = moves[0]
+        board.push(self.best_move)
 
         self.update_position_counts(board)  # update for this move
         end = time.time()
@@ -76,40 +56,24 @@ class v3_Minimax:
     def search(self, board, ply_remaining, ply_from_root, alpha, beta, last_move=None):
         if ply_from_root > 0:
             if (self.is_potential_threefold_repetition(board) or board.is_fifty_moves() or board.is_stalemate()) and self.evaluate(board) > 0:
-                #print("----avoiding draw----")
-                return -1.5 # discourage tie if winning
+                return -1.5 # discourage draw
 
         moves = sorted(board.legal_moves, key=lambda move: board.is_capture(move), reverse=True)
-        ''' 
-        evaluation is essentially flipped at this point since the tested move has not been popped.
-        therefore low evaluations are good for the bot
-        
-        '''
-        if not moves:
-            if board.is_checkmate():  # checkmate is the worst outcome
-                return float('-inf')
-            else:  # stalemate, or another form of draw
-                print('\nDRAW\n')
-                if self.evaluate(board) < 0:  # opponent is losing, don't take a draw
-                    #print(self.evaluate(board), board.board_fen())
-                    #print(self.evaluate(board, True))
-                    print("DECLINED")
-                    return -1.5
-                else:  # opponent is winning, take the draw
-                    #print(self.evaluate(board), board.board_fen())
-                    #print(self.evaluate(board, True))
-                    print('ACCEPTED')
-                    return 0
 
         if ply_remaining == 0:  # evaluate
             return self.evaluate(board)
+        if not moves:
+            if board.is_checkmate():  # checkmate is the worst outcome
+                return float('-1000000')
+            else:  # stalemate, or another form of draw
+                return 0
 
         for move in moves:
             board.push(move)
             self.positions_evaluated += 1
             eval = -self.search(board, ply_remaining - 1, ply_from_root + 1, -beta, -alpha)
             board.pop()
-            # Move was *too* good, opponent will choose a different move earlier on to avoid this position.
+            # Move was *too* good, opponent will choose a different move earlier on to avoid this position. 'hard pruning'
             if eval >= beta:
                 return beta
             if eval > alpha:
@@ -120,7 +84,7 @@ class v3_Minimax:
 
 
     @staticmethod
-    def evaluate(board, debug=False):
+    def evaluate(board):
         piece_map = board.piece_map()
         score = 0
         for square, piece in piece_map.items():
@@ -131,9 +95,6 @@ class v3_Minimax:
             else:
                 score -= value
         eval = score if board.turn else -score
-        if debug:
-            print('white turn' if board.turn else 'black turn')
-            print("debug:", eval)
         return eval
 
     def is_potential_threefold_repetition(self, board):

@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # profiler = cProfile.Profile()
     # profiler.enable()
     #start = time.time()
-    simulate.run_simulations(2, bot_1, bot_2, visual=visual)
+    simulate.run_simulations(1, bot_1, bot_2, visual=visual)
     # = time.time()
     # print("Simulation took", (end - start), "seconds.")
     # profiler.disable()

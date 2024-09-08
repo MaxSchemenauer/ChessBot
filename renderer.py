@@ -123,8 +123,8 @@ class Renderer:
             if self.game_ended:
                 self.handle_game_end_events()
             else:
-                # if self.game.board.turn != self.piece_color:
-                #     self.engine_move()
+                if self.game.board.turn != self.piece_color:
+                    self.engine_move()
                 self.handle_events()
             self.handle_keyboard_events()
             self.update_screen()

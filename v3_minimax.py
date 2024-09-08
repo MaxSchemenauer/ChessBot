@@ -30,7 +30,7 @@ class v3_Minimax:
         """
         # profiler = cProfile.Profile()
         # profiler.enable()
-        start = time.time()
+        # start = time.time()
         board = self.game.board
         self.update_position_counts(board)  # update to get opponents moves
         self.positions_evaluated = 0
@@ -46,16 +46,16 @@ class v3_Minimax:
         board.push(self.best_move)
 
         self.update_position_counts(board)  # update for this move
-        end = time.time()
+        # end = time.time()
         # profiler.disable()
         # profiler.print_stats(sort='time')
-        self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
-        print(self.time_and_positions[-1])
+        # self.time_and_positions.append((f'{self.best_move.uci()}, {self.best_eval}', round((end - start), 3), f": {self.positions_evaluated} positions evaluated"))
+        # #print(self.time_and_positions[-1])
         return self.game.check_game_state()
 
     def search(self, board, ply_remaining, ply_from_root, alpha, beta, last_move=None):
         if ply_from_root > 0:
-            if (self.is_potential_threefold_repetition(board) or board.is_fifty_moves() or board.is_stalemate()) and self.evaluate(board) > 0:
+            if self.evaluate(board) > 0 and (self.is_potential_threefold_repetition(board) or board.is_fifty_moves() or board.is_stalemate()):
                 return -1.5 # discourage draw
 
         moves = sorted(board.legal_moves, key=lambda move: board.is_capture(move), reverse=True)
@@ -108,8 +108,8 @@ class v3_Minimax:
             self.position_counts[fen] = 1
 
     def reset(self):
-        # times = [time for _, time, _ in self.time_and_positions]
-        # print("average time per move:", sum(times) / len(times))
+        times = [time for _, time, _ in self.time_and_positions]
+        print("average time per move:", sum(times) / len(times))
         self.position_counts = {}
         self.time_and_positions = []
         self.positions_evaluated = 0
